@@ -1,0 +1,166 @@
+#include <U8glib.h>
+#include <Servo.h>
+
+U8GLIB_ST7920_128X64 u8g( 13,11,10, U8G_PIN_NONE); //SPI
+
+Servo myservo;
+
+//int trig1=2;
+//int echo1=3;
+int trigPin=4;
+int echoPin=5;
+int  trig1=14;
+int  echo1=15;
+int  trig2=16;
+int  echo2=17;
+int  trig3=18;
+int  echo3=19;
+long duration;
+long distance;
+long duration1;
+long distance1;
+long duration2;
+long distance2;
+long duration3;
+long distance3;
+float average;
+int percent;
+
+void draw(void) {
+// graphic comm-ands to redraw the complete screen should be placed here
+u8g.setFont(u8g_font_unifont);
+u8g.setFont(u8g_font_osb21);
+u8g.drawStr( 0, 22, "PLASTIC");
+u8g.setPrintPos(40, 56);
+u8g.print(percent);
+u8g.print("%");
+}
+
+void setup() {
+  // put your setup code here, to run once:
+
+// flip screen, if required
+// u8g.setRot180();
+// set SPI backup if required
+//u8g.setHardwareBackup(u8g_backup_avr_spi);
+// assign default color value
+
+if ( u8g.getMode() == U8G_MODE_R3G3B2 ){
+u8g.setColorIndex(255); // white
+}
+else if ( u8g.getMode() == U8G_MODE_GRAY2BIT ){
+u8g.setColorIndex(3); // max intensity
+}
+else if ( u8g.getMode() == U8G_MODE_BW ){
+u8g.setColorIndex(1); // pixel on
+}
+
+Serial.begin(9600);
+myservo.attach(7);
+pinMode(trigPin, OUTPUT);
+  pinMode(trig1, OUTPUT);
+  pinMode(trig2, OUTPUT);
+  pinMode(trig3, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(echo1, INPUT);
+  pinMode(echo2, INPUT);
+  pinMode(echo3, INPUT);
+  
+  Serial.begin(9600);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+//myservo.write(0);
+//delay(3000);
+//myservo.write(90);
+//delay(3000);
+
+  digitalWrite(trigPin,LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin,LOW);
+  duration=pulseIn(echoPin,HIGH);
+  distance=duration/58.2;
+
+  delay(50);
+  
+  digitalWrite(trig1,LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig1,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig1,LOW);
+  duration1=pulseIn(echo1,HIGH);
+  distance1=duration1/58.2;
+  
+  delay(50);
+
+  digitalWrite(trig3,LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig3,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig3,LOW);
+  duration3=pulseIn(echo3,HIGH);
+  distance3=duration3/58.2;
+
+  average=(distance1+distance3)/2;
+  percent=(1-average/83)*100;
+
+// picture loop
+u8g.firstPage();
+do {
+draw();
+} while( u8g.nextPage() );
+// rebuild the picture after some delay
+delay(500);
+
+  digitalWrite(trig2,LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig2,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig2,LOW);
+  duration2=pulseIn(echo2,HIGH);
+  distance2=duration2/58.2;
+  
+  delay(50);
+
+
+if(distance<=30){
+  myservo.write(21);
+  Serial.print("d2:");
+  Serial.print(distance2);
+  Serial.print(" d:");
+  Serial.println(distance);
+  //Serial.print("-");
+}
+else if (distance>30 && distance2<=5){
+  Serial.print("D2:");
+  Serial.print(distance2);
+  Serial.print(" D:");
+  Serial.println(distance);
+  myservo.write(95);
+  }
+else if (distance>30 && distance2>5 && distance2<=80){
+  Serial.print(" d2':");
+  Serial.println(distance2);
+  myservo.write(21);
+  }
+else if (distance>30 && distance2>5 && distance2>80){
+  Serial.print(" d2':");
+  Serial.println(distance2);
+  myservo.write(95);
+  }
+
+
+// do {
+//  myservo.write(21);
+// } while (distance2<=60);
+
+
+//else if (distance>30){
+//  myservo.write(99);
+//}
+
+}
+
